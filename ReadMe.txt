@@ -1,75 +1,71 @@
 
 ============================================================
 
-    Sample Model
-    Niziiro Mao (PRO Version)
+サンプルモデル　しずく PRO版
 
 ============================================================
 
-    This model provides examples of using Blend Shapes, multiply color and screen color for you to learn.
-    Blend Shapes are used to add differential shapes to the mouth, eyebrows, hair movement, etc.
-    As for the multiply color and screen color, they are used to express color changes in effects.
-    This is also a front-facing model that is suitable for VTuber usage, with a wide movable range for the face.
+　「しずくの時間」でお馴染みのモデルです。
+　手の細かい動きによって表情豊かな演出ができます。
 
-    ※”Motions for magic effects and facial expressions”, which are not used in conjunction with the general motions for facial expressions, are also included.
+　※本データはCubism 2.1にて作成されたデータを
+　Cubism 4およびCubism Viewer 4および対応するソフトウェアにて動作する形式に変換したものです
+
+------------------------------
+ライセンスについて
+------------------------------
+
+　一般ユーザーおよび小規模事業者は規約同意により商用利用可能です。
+　中・大規模事業者は非公開テスト用途でのみ利用可能です。
+　ご利用に際しては以下の『無償提供マテリアルの使用許諾契約書』
+　(ライセンスタイプ ・Live2Dオリジナルキャラクター)および利用条件への同意が必要です。
+
+　ライセンスの詳細については、下記ページをご覧ください。
+　https://www.live2d.com/download/sample-data/
 
 
 ------------------------------
-    License Agreement
+クリエイター
 ------------------------------
 
-    You need to agree "Free Material License Agreement" and "Terms of Use" to use this sample model.
-    General Users and Small-Scale Enterprise Users can use the model for commercial purposes by accepting the "Free Material License Agreement".
-    Parties other than General User or Small-Scale Enterprise User are allowed to use the model for Internal or Supervision Purpose.
-    Please refer to this agreement for more details.
-
-    For more information on licensing, please see the following page.
-    https://www.live2d.com/en/download/sample-data/
-
+　イラスト：Live2D Inc.
+　モデリング：Live2D Inc.
 
 ------------------------------
-    Creator
+サンプルデータ構成
 ------------------------------
 
-    - Illustration: Live2D Inc.
-    - Modeling: Live2D Inc.
-
-
-------------------------------
-    Sample Data Composition
-------------------------------
-
-    - Model data (.cmo3)
-    - Basic motion (.can3)
-    - Embedded file set (.runtime folder)
-        - Model data (.moc3)
-        - Expression data (.exp3.json)
-        - Motion data (.motion3.json)
-        - Model setting file (.model3.json)
-        - Physical calculation setting file (.physics3.json)
-        - Pose setting file (.pose3.json)
-        - Display auxiliary file (.cdi3.json)
+　モデルデータ（cmo3）※物理演算設定を含む
+　基本モーション（can3）
+　組込用ファイル一式（runtimeフォルダ）
+　・モデルデータ（moc3）
+　・モーションデータ（motion3.json）
+　・モデル設定ファイル（model3.json）
+　・物理演算設定ファイル（physics3.json）
+　・ポーズ設定ファイル（pose.json）
+　・表示補助ファイル（cdi3.json）
 
 
 ------------------------------
-    Release Note
+テイク情報
 ------------------------------
 
-    - 2025-03-14
-        - Fixed issues related to runtime files.
+　【cmo3】
 
-    - 2024-09-05
-        - Added scene to playlist.
+  shizuku_t02
+　2020年10月22日　不正な状態の変形パスを削除しました
 
-    - 2023-09-21
-        - Added motion using new features of Cubism 5.0.
+　shizuku_t01
+　2020年9月17日　ファイルパスを修正しました
+　2020年9月17日　cmo3で保存し直しました
 
-    - 2023-05-31
-        - Corrected parameter name.
 
-    - 2022-07-21
-        - Modified some Parameter IDs of the arms.
-        - Added some keyframes at the beginnning of the scenes.
+　【can3】
 
-    - 2022-06-23
-        - Released.
+　shizuku_t01
+　2020年9月17日　can3で保存し直しました
+
+　
+　【その他】
+　
+　2020年9月17日　moc3を含む組込用ファイル一式を書き出しました
