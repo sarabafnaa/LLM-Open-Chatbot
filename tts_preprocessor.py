@@ -1,118 +1,196 @@
-# config_manager/translate.py
-from typing import Literal, Optional, Dict, ClassVar
-from pydantic import ValidationInfo, Field, model_validator
-from .i18n import I18nMixin, Description
-
-# --- Sub-models for specific Translator providers ---
+import re
+import unicodedata
+from loguru import logger
+from ..translate.translate_interface import TranslateInterface
 
 
-class DeepLXConfig(I18nMixin):
-    """Configuration for DeepLX translation service."""
+def tts_filter(
+    text: str,
+    remove_special_char: bool,
+    ignore_brackets: bool,
+    ignore_parentheses: bool,
+    ignore_asterisks: bool,
+    ignore_angle_brackets: bool,
+    translator: TranslateInterface | None = None,
+) -> str:
+    """
+    Filter or do anything to the text before TTS generates the audio.
+    Changes here do not affect subtitles or LLM's memory. The generated audio is
+    the only affected thing.
 
-    deeplx_target_lang: str = Field(..., alias="deeplx_target_lang")
-    deeplx_api_endpoint: str = Field(..., alias="deeplx_api_endpoint")
+    Args:
+        text (str): The text to filter.
+        remove_special_char (bool): Whether to remove special characters.
+        ignore_brackets (bool): Whether to ignore text within brackets.
+        ignore_parentheses (bool): Whether to ignore text within parentheses.
+        ignore_asterisks (bool): Whether to ignore text within asterisks.
+        translator (TranslateInterface, optional):
+            The translator to use. If None, we'll skip the translation. Defaults to None.
 
-    DESCRIPTIONS: ClassVar[Dict[str, Description]] = {
-        "deeplx_target_lang": Description(
-            en="Target language code for DeepLX translation",
-            zh="DeepLX 翻译的目标语言代码",
-        ),
-        "deeplx_api_endpoint": Description(
-            en="API endpoint URL for DeepLX service", zh="DeepLX 服务的 API 端点 URL"
-        ),
-    }
+    Returns:
+        str: The filtered text.
+    """
+    if ignore_asterisks:
+        try:
+            text = filter_asterisks(text)
+        except Exception as e:
+            logger.warning(f"Error ignoring asterisks: {e}")
+            logger.warning(f"Text: {text}")
+            logger.warning("Skipping...")
 
+    if ignore_brackets:
+        try:
+            text = filter_brackets(text)
+        except Exception as e:
+            logger.warning(f"Error ignoring brackets: {e}")
+            logger.warning(f"Text: {text}")
+            logger.warning("Skipping...")
+    if ignore_parentheses:
+        try:
+            text = filter_parentheses(text)
+        except Exception as e:
+            logger.warning(f"Error ignoring parentheses: {e}")
+            logger.warning(f"Text: {text}")
+            logger.warning("Skipping...")
+    if ignore_angle_brackets:
+        try:
+            text = filter_angle_brackets(text)
+        except Exception as e:
+            logger.warning(f"Error ignoring angle brackets: {e}")
+            logger.warning(f"Text: {text}")
+            logger.warning("Skipping...")
+    if remove_special_char:
+        try:
+            text = remove_special_characters(text)
+        except Exception as e:
+            logger.warning(f"Error removing special characters: {e}")
+            logger.warning(f"Text: {text}")
+            logger.warning("Skipping...")
+    if translator:
+        try:
+            logger.info("Translating...")
+            text = translator.translate(text)
+            logger.info(f"Translated: {text}")
+        except Exception as e:
+            logger.critical(f"Error translating: {e}")
+            logger.critical(f"Text: {text}")
+            logger.warning("Skipping...")
 
-class TencentConfig(I18nMixin):
-    """Configuration for tencent translation service."""
-
-    secret_id: str = Field(..., description="Tencent Secret ID")
-    secret_key: str = Field(..., description="Tencent Secret Key")
-    region: str = Field(..., description="Region for Tencent Service")
-    source_lang: str = Field(
-        ..., description="Source language code for tencent translation"
-    )
-    target_lang: str = Field(
-        ..., description="Target language code for tencent translation"
-    )
-
-    DESCRIPTIONS: ClassVar[Dict[str, Description]] = {
-        "secret_id": Description(en="Tencent Secret ID", zh="腾讯服务的Secret ID"),
-        "secret_key": Description(en="Tencent Secret Key", zh="腾讯服务的Secret Key"),
-        "region": Description(en="Region for Tencent Service", zh="腾讯服务使用的区域"),
-        "source_lang": Description(
-            en="Source language code for tencent translation", zh="腾讯翻译的源语言代码"
-        ),
-        "target_lang": Description(
-            en="Target language code for tencent translation",
-            zh="腾讯翻译的目标语言代码",
-        ),
-    }
-
-
-# --- Main TranslatorConfig model ---
-
-
-class TranslatorConfig(I18nMixin):
-    """Configuration for translation services."""
-
-    translate_audio: bool = Field(..., alias="translate_audio")
-    translate_provider: Literal["deeplx", "tencent"] = Field(
-        ..., alias="translate_provider"
-    )
-    deeplx: Optional[DeepLXConfig] = Field(None, alias="deeplx")
-    tencent: Optional[TencentConfig] = Field(None, alias="tencent")
-
-    DESCRIPTIONS: ClassVar[Dict[str, Description]] = {
-        "translate_audio": Description(
-            en="Enable audio translation (requires DeepLX deployment)",
-            zh="启用音频翻译（需要部署 DeepLX）",
-        ),
-        "translate_provider": Description(
-            en="Translation service provider to use", zh="要使用的翻译服务提供者"
-        ),
-        "deeplx": Description(
-            en="Configuration for DeepLX translation service", zh="DeepLX 翻译服务配置"
-        ),
-        "tencent": Description(
-            en="Configuration for TenCent translation service", zh="腾讯 翻译服务配置"
-        ),
-    }
-
-    @model_validator(mode="after")
-    def check_translator_config(cls, values: "TranslatorConfig", info: ValidationInfo):
-        translate_audio = values.translate_audio
-        translate_provider = values.translate_provider
-
-        if translate_audio:
-            if translate_provider == "deeplx" and values.deeplx is None:
-                raise ValueError(
-                    "DeepLX configuration must be provided when translate_audio is True and translate_provider is 'deeplx'"
-                )
-            elif translate_provider == "tencent" and values.tencent is None:
-                raise ValueError(
-                    "Tencent configuration must be provided when translate_audio is True and translate_provider is 'tencent'"
-                )
-
-        return values
+    logger.debug(f"Filtered text: {text}")
+    return text
 
 
-class TTSPreprocessorConfig(I18nMixin):
-    """Configuration for TTS preprocessor."""
+def remove_special_characters(text: str) -> str:
+    """
+    Filter text to remove all non-letter, non-number, and non-punctuation characters.
 
-    remove_special_char: bool = Field(..., alias="remove_special_char")
-    ignore_brackets: bool = Field(default=True, alias="ignore_brackets")
-    ignore_parentheses: bool = Field(default=True, alias="ignore_parentheses")
-    ignore_asterisks: bool = Field(default=True, alias="ignore_asterisks")
-    ignore_angle_brackets: bool = Field(default=True, alias="ignore_angle_brackets")
-    translator_config: TranslatorConfig = Field(..., alias="translator_config")
+    Args:
+        text (str): The text to filter.
 
-    DESCRIPTIONS: ClassVar[Dict[str, Description]] = {
-        "remove_special_char": Description(
-            en="Remove special characters from the input text",
-            zh="从输入文本中删除特殊字符",
-        ),
-        "translator_config": Description(
-            en="Configuration for translation services", zh="翻译服务的配置"
-        ),
-    }
+    Returns:
+        str: The filtered text.
+    """
+    normalized_text = unicodedata.normalize("NFKC", text)
+
+    def is_valid_char(char: str) -> bool:
+        category = unicodedata.category(char)
+        return (
+            category.startswith("L")
+            or category.startswith("N")
+            or category.startswith("P")
+            or char.isspace()
+        )
+
+    filtered_text = "".join(char for char in normalized_text if is_valid_char(char))
+    return filtered_text
+
+
+def _filter_nested(text: str, left: str, right: str) -> str:
+    """
+    Generic function to handle nested symbols.
+
+    Args:
+        text (str): The text to filter.
+        left (str): The left symbol (e.g. '[' or '(').
+        right (str): The right symbol (e.g. ']' or ')').
+
+    Returns:
+        str: The filtered text.
+    """
+    if not isinstance(text, str):
+        raise TypeError("Input must be a string")
+    if not text:
+        return text
+
+    result = []
+    depth = 0
+    for char in text:
+        if char == left:
+            depth += 1
+        elif char == right:
+            if depth > 0:
+                depth -= 1
+        else:
+            if depth == 0:
+                result.append(char)
+    filtered_text = "".join(result)
+    filtered_text = re.sub(r"\s+", " ", filtered_text).strip()
+    return filtered_text
+
+
+def filter_brackets(text: str) -> str:
+    """
+    Filter text to remove all text within brackets, handling nested cases.
+
+    Args:
+        text (str): The text to filter.
+
+    Returns:
+        str: The filtered text.
+    """
+    return _filter_nested(text, "[", "]")
+
+
+def filter_parentheses(text: str) -> str:
+    """
+    Filter text to remove all text within parentheses, handling nested cases.
+
+    Args:
+        text (str): The text to filter.
+
+    Returns:
+        str: The filtered text.
+    """
+    return _filter_nested(text, "(", ")")
+
+
+def filter_angle_brackets(text: str) -> str:
+    """
+    Filter text to remove all text within angle brackets, handling nested cases.
+
+    Args:
+        text (str): The text to filter.
+
+    Returns:
+        str: The filtered text.
+    """
+    return _filter_nested(text, "<", ">")
+
+
+def filter_asterisks(text: str) -> str:
+    """
+    Removes text enclosed within asterisks of any length (*, **, ***, etc.) from a string.
+
+    Args:
+        text: The input string.
+
+    Returns:
+        The string with asterisk-enclosed text removed.
+    """
+    # Handle asterisks of any length (*, **, ***, etc.)
+    filtered_text = re.sub(r"\*{1,}((?!\*).)*?\*{1,}", "", text)
+
+    # Clean up any extra spaces
+    filtered_text = re.sub(r"\s+", " ", filtered_text).strip()
+
+    return filtered_text
